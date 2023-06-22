@@ -1,60 +1,12 @@
-class CameraManager:
-    def __init__(self):
-        self.cameras = []
+from abc import ABC, abstractmethod
 
-    def __len__(self):
-        return len(self.cameras)
-
-    def __getitem__(self, index):
-        return self.cameras[index]
-
-    def __iter__(self):
-        return iter(self.cameras)
-
-    def do_something_for_all(self, abstract_class_method):
-        results = [abstract_class_method(camera) for camera in self.cameras]
-        return results
-
-    def get_camera_with_index(self):
-        return [(i, camera) for i, camera in enumerate(self.cameras)]
-
-    def get_camera_with_result(self, abstract_class_method):
-        results = self.do_something_for_all(abstract_class_method)
-        return zip(self.cameras, results)
-
-    def get_attributes_by_type(self, data_type):
-        attributes = {key: value for camera in self.cameras for key, value in camera.__dict__.items()
-                      if isinstance(value, data_type)}
-        return attributes
-
-    def check_conditions(self, condition):
-        all_condition = all(condition(camera) for camera in self.cameras)
-        any_condition = any(condition(camera) for camera in self.cameras)
-        return {"all": all_condition, "any": any_condition}
-
-    def main(self):
-        digital_camera = Camera("Canon", "D200", "50mm")
-        digital_camera.resolution = "1024x768"
-        digital_camera.zoom = 1.0
-        digital_camera.memory_card_type = "SD"
-        digital_camera.photos_count = 0
-        self.cameras.append(digital_camera)
-
-        film_camera = Camera("Nikon", "F3", "35mm")
-        film_camera.film_type = "35mm"
-        film_camera.film_iso = 400
-        self.cameras.append(film_camera)
-
-        for camera in self.cameras:
-            print(camera.take_photo())
-
-
-class Camera:
+class Camera(ABC):
     def __init__(self, brand, model, lens):
         self.brand = brand
         self.model = model
         self.lens = lens
 
+    @abstractmethod
     def take_photo(self):
         pass
 
@@ -143,6 +95,60 @@ class FilmCamera(Camera):
 
     def set_film_iso(self, film_iso):
         self.film_iso = film_iso
+
+
+class CameraManager:
+    def __init__(self):
+        self.cameras = []
+
+    def __len__(self):
+        return len(self.cameras)
+
+    def __getitem__(self, index):
+        return self.cameras[index]
+
+    def __iter__(self):
+        return iter(self.cameras)
+
+    def do_something_list(self):
+        return [obj.do_something() for obj in self.cameras if hasattr(obj, 'do_something')]
+
+    def enumerate_concat(self):
+        return [(index, obj) for index, obj in enumerate(self.cameras)]
+
+    def zip_concat(self):
+        return [(obj, obj.do_something()) for obj in self.cameras if hasattr(obj, 'do_something')]
+
+    def dict_by_type(self, data_type):
+        return {attr: value for camera in self.cameras for attr, value in camera.__dict__.items() if isinstance(value, data_type)}
+
+    def all_any_check(self, condition):
+        return {'all': all(condition(obj) for obj in self.cameras), 'any': any(condition(obj) for obj in self.cameras)}
+
+    def main(self):
+        digital_camera = DigitalCamera("Canon", "D200", "50mm", "1024x768", 1.0, "SD", 0)
+        self.cameras.append(digital_camera)
+
+        film_camera = FilmCamera("Nikon", "F3", "35mm", "35mm", 400)
+        self.cameras.append(film_camera)
+
+        for camera in self.cameras:
+            print(camera.take_photo())
+
+        print("Results of do_something_list:")
+        print(self.do_something_list())
+
+        print("Enumerate concatenation:")
+        print(self.enumerate_concat())
+
+        print("Zip concatenation:")
+        print(self.zip_concat())
+
+        print("Dictionary of attributes by type:")
+        print(self.dict_by_type(int))
+
+        print("All and any check:")
+        print(self.all_any_check(lambda obj: obj.get_brand() == "Canon"))
 
 
 if __name__ == "__main__":
